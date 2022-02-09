@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>定位與經緯度距離計算</title>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <style>
+table, th, td {
+  border: 1px solid black;
+}
+</style>
+		<script>            
+			function locate(){
+				if (navigator.geolocation){
+					navigator.geolocation.getCurrentPosition(successHandler,errorHandler);
+				} else {
+					// Browser doesn't support Geolocation
+					alert("未允許或遭遇錯誤！");
+				}
+			}
+			function successHandler(position) {
+			$('#err')[0].innerHTML ='';
+				var pos = {
+						lat: position.coords.latitude,
+						lng: position.coords.longitude
+					};                
+					$('#currentPosition').attr("href","https://www.google.com/maps?daddr='+pos.lat+','+pos.lng");
+					$('#lat').text(pos.lat);
+					$('#lng').text(pos.lng);
+					getLatLng();
+			}
+
+			function errorHandler(err) {
+				$('#err')[0].innerHTML = '錯誤:' + err.message;
+			}
+			
+			function getLatLng(){
+				var html = '';
+				$('.addr').each(function(index){
+					var addr = $(this).text();
+					var loc1 = addressToLatLng(addr,index);
+					var dis = '';
+					//console.log(loc1);
+					//html += '<tr><td>' + addr + '</td><td>' + loc1 + '</td><td>' + dis + '</td></tr>';
+				});
+				//$('#data').text('');
+				//$('#data').append(html);
+			}
+			
+			function addressToLatLng(addr,index1) {
+                var geocoder = new google.maps.Geocoder();
+				var res = '';
+                geocoder.geocode({
+                    "address": addr
+                }, function (results, status) {					
+                    if (status == google.maps.GeocoderStatus.OK) {	
+						$('.loc').each(function(index){
+							if(index1==index){
+								$(this).text(results[0].geometry.location.lat() + "," + results[0].geometry.location.lng());
+							}
+						});
+						
+						$('.dis').each(function(index){
+							if(index1==index){
+								$(this).text(distance(results[0].geometry.location.lat(),results[0].geometry.location.lng(),'K'));
+							}
+						});
+                 						
+                    }
+					else if (status == google.maps.GeocoderStatus.ZERO_RESULTS) {
+						alert("您輸入的地址可能不存在!\nThis may occur if the geocoder was passed a non-existent address.");					
+					}
+					else if (status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
+						alert("經緯度查詢已超過免費配額，明日請早!\nSorry! We are over our quota.");					
+					}
+					else if (status == google.maps.GeocoderStatus.REQUEST_DENIED) {
+						alert("請求被拒絕!\nYour request was denied.");					
+					}
+					else {
+                        var content = $("#target").val();
+                        $("#target").val(content + addr + "查無經緯度，或系統發生錯誤！" + "\n");
+                    }
+                });				
+				return res;
+            }
+			
+			function distance(lat2, lon2, unit) {
+			var lat1 = $('#lat').text();
+			var lon1 = $('#lng').text();
+    if ((lat1 == lat2) && (lon1 == lon2)) {
+        return 0;
+    }
+    else {
+        var radlat1 = Math.PI * lat1/180;
+        var radlat2 = Math.PI * lat2/180;
+        var theta = lon1-lon2;
+        var radtheta = Math.PI * theta/180;
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        if (dist > 1) {
+            dist = 1;
+        }
+        dist = Math.acos(dist);
+        dist = dist * 180/Math.PI;
+        dist = dist * 60 * 1.1515;
+        if (unit=="K") { dist = dist * 1.609344 }
+        if (unit=="N") { dist = dist * 0.8684 }
+        return dist;
+    }
+}
+        </script>
+		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    </head>
+    
+    <body>
+		<a id="currentPosition">當前位置</a>
+		<p id='lat'></p><p id='lng'></p>
+		<p id="err"></p>
+		<input type="button" value="重新定位" name="B1" onclick="locate();">
+		<input type="button" value="測試" name="B1" onclick="getLatLng();">
+		<table>
+			<thead>
+				<tr>
+					<th>地址</th>
+					<th>經緯度</th>
+					<th>距離</th>
+				</tr>
+			</thead>
+			<tbody id="data">
+				<tr>
+					<td class='addr'>花蓮縣花蓮市國聯二路110號</td><td class='loc'></td><td class='dis'></td>
+				</tr>
+				<tr>
+					<td class='addr'>花蓮縣花蓮市國聯一路100號</td><td class='loc'></td><td class='dis'></td>
+				</tr>
+				<tr>
+					<td class='addr'>花蓮縣花蓮市民國路163號</td><td class='loc'></td><td class='dis'></td>
+				</tr>
+				<tr>
+					<td class='addr'>花蓮縣花蓮市公正街14號</td><td class='loc'></td><td class='dis'></td>
+				</tr>
+			</tbody>
+		</table>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=YourApiKey" type="text/javascript"></script>
+	</body>
+</html>
